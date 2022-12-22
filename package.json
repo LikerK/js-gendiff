@@ -1,0 +1,27 @@
+{
+  "name": "gendiff-js",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/gendiff.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LikerK/js-gendiff.git"
+  },
+  "bin": {
+    "js-gendiff": "bin/gendiff.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LikerK/js-gendiff/issues"
+  },
+  "homepage": "https://github.com/LikerK/js-gendiff#readme",
+  "dependencies": {
+    "commander": "^9.4.1",
+    "lodash": "^4.17.21"
+  }
+}
