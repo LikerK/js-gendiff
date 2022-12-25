@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import '../src/gendiff.js'
+import '../src/gendiff.js';
