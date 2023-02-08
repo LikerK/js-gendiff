@@ -6,32 +6,22 @@ const getDiff = (data1, data2) => {
   const keysData1 = Object.keys(data1);
   const keysData2 = Object.keys(data2);
   const commonKeys = _.union(keysData1, keysData2).sort();
-  return commonKeys.reduce((acc, key) => {
-    const [value1, value2] = [data1[key], data2[key]];
-    let type;
-    let value;
-    if (key in data1 && !(key in data2)) {
-      type = 'removed';
-      value = value1;
-    } else if (value1 === value2) {
-      type = 'unchanged';
-      value = value1;
-    } else if (key in data2 && !(key in data1)) {
-      type = 'added';
-      value = value2;
-    } else if (_.isObject(value2) && _.isObject(value1)) {
-      type = 'nested';
-      value = getDiff(value1, value2);
-    } else {
-      type = 'changed';
-      value = [value1, value2];
+  return commonKeys.map((item) => {
+    const [value1, value2] = [data1[item], data2[item]];
+    if (item in data1 && !(item in data2)) {
+      return { key: item, type: 'removed', value: value1 };
     }
-    acc[key] = {
-      typeValue: type,
-      valueItem: value,
-    };
-    return acc;
-  }, {});
+    if (value1 === value2) {
+      return { key: item, type: 'unchanged', value: value1 };
+    }
+    if (item in data2 && !(item in data1)) {
+      return { key: item, type: 'added', value: value2 };
+    }
+    if (_.isObject(value2) && _.isObject(value1)) {
+      return { key: item, type: 'nested', value: getDiff(value1, value2) };
+    }
+    return { key: item, type: 'changed', value: [value1, value2] };
+  });
 };
 
 const gendiff = (path1, path2, format) => {
