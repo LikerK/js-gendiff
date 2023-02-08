@@ -1,53 +1,46 @@
 import _ from 'lodash';
 
-const VERTEX_TYPES = {
-  added: '+ ',
-  removed: '- ',
-  unchanged: '  ',
-};
-const DEPTH = '  ';
+const REPLACER = '  ';
+const ADDED = '+';
+const REMOVE = '-';
 
-const getStringValue = (value, depthLvl) => {
-  if (_.isObject(value)) {
-    const result = [];
-    const keys = Object.keys(value);
-    const indent = DEPTH.repeat(depthLvl + 2);
-    keys.map((key) => result.push(
-      `${indent}${VERTEX_TYPES.unchanged}${key}: `,
-      `${getStringValue(value[key], depthLvl + 2)}\n`,
-    ));
-    return `{\n${result.join('')}${DEPTH.repeat(depthLvl + 1)}}`;
+const makeReplaces = (depth) => `${REPLACER.repeat((2 * depth - 1))}`;
+
+const makeString = (data, depth) => {
+  if (!_.isObject(data)) {
+    return data;
   }
-  return value;
+
+  const result = Object.entries(data).map(([key, value]) => `${makeReplaces(depth + 1)}  ${key}: ${makeString(value, depth + 1)}`);
+  return `{\n${result.join('\n')}\n${makeReplaces(depth)}  }`;
 };
-// '`=`' //
-const stringifyNode = (keyNode, node, depthLvl) => {
-  const result = [];
-  const type = node.typeValue;
-  const value = node.valueItem;
-  const indent = DEPTH.repeat(depthLvl);
-  if (type === 'nested') {
-    const keys = Object.keys(value);
-    result.push(`${indent}${VERTEX_TYPES.unchanged}${keyNode}: {`);
-    const nodesString = keys.map((key) => stringifyNode(key, value[key], depthLvl + 2));
-    result.push(`${nodesString.join('\n')}\n${DEPTH.repeat(depthLvl + 1)}}`);
-  } else if (type === 'changed') {
-    const [value1, value2] = value;
-    const keyString1 = `${indent}${VERTEX_TYPES.removed}${keyNode}`;
-    const keyString2 = `${indent}${VERTEX_TYPES.added}${keyNode}`;
-    result.push(`${keyString1}: ${getStringValue(value1, depthLvl)}`);
-    result.push(`${keyString2}: ${getStringValue(value2, depthLvl)}`);
-  } else {
-    const keyString = `${indent}${VERTEX_TYPES[type]}${keyNode}`;
-    result.push(`${keyString}: ${getStringValue(value, depthLvl)}`);
-  }
-  return result.join('\n');
-};
+
+const getString = (key, value, depth, symbol = ' ') => `${makeReplaces(depth)}${symbol} ${key}: ${makeString(value, depth)}`;
 
 const getStylishFormat = (data) => {
-  const keys = Object.keys(data);
-  const nodesString = keys.map((key) => stringifyNode(key, data[key], 1));
-  return `{\n${nodesString.join('\n')}\n}`;
+  const iter = (nodes, depth) => nodes.map(({ key, type, value }) => {
+    switch (type) {
+      case 'nested':
+        return [
+          `${makeReplaces(depth)}  ${key}: {`,
+          iter(value, depth + 1),
+          `${makeReplaces(depth)}  }`,
+        ];
+      case 'added':
+        return getString(key, value, depth, ADDED);
+      case 'removed':
+        return getString(key, value, depth, REMOVE);
+      case 'changed':
+        return [
+          `${getString(key, value[0], depth, REMOVE)}`,
+          `${getString(key, value[1], depth, ADDED)}`,
+        ].join('\n');
+      default:
+        return getString(key, value, depth);
+    }
+  });
+  const result = iter(data, 1).flat(Infinity);
+  return `{\n${result.join('\n')}\n}`;
 };
 
 export default getStylishFormat;
