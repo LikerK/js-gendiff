@@ -10,7 +10,6 @@ const makeString = (data, depth) => {
   if (!_.isObject(data)) {
     return data;
   }
-
   const result = Object.entries(data).map(([key, value]) => `${makeReplaces(depth + 1)}  ${key}: ${makeString(value, depth + 1)}`);
   return `{\n${result.join('\n')}\n${makeReplaces(depth)}  }`;
 };

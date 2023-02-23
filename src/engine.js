@@ -2,25 +2,23 @@ import _ from 'lodash';
 import getContent from './parser.js';
 import FORMATS from './formats/styles.js';
 
-const getDiff = (data1, data2) => {
-  const keysData1 = Object.keys(data1);
-  const keysData2 = Object.keys(data2);
-  const commonKeys = _.union(keysData1, keysData2).sort();
-  return commonKeys.map((item) => {
-    const [value1, value2] = [data1[item], data2[item]];
-    if (item in data1 && !(item in data2)) {
-      return { key: item, type: 'removed', value: value1 };
+const getDiff = (obj1, obj2) => {
+  const [keys1, keys2] = [Object.keys(obj1), Object.keys(obj2)];
+  const unionKeys = _.sortBy(_.union(keys1, keys2));
+  return unionKeys.map((item) => {
+    if (!Object.hasOwn(obj2, item)) {
+      return { key: item, type: 'removed', value: obj1[item] };
     }
-    if (value1 === value2) {
-      return { key: item, type: 'unchanged', value: value1 };
+    if (!Object.hasOwn(obj1, item)) {
+      return { key: item, type: 'added', value: obj2[item] };
     }
-    if (item in data2 && !(item in data1)) {
-      return { key: item, type: 'added', value: value2 };
+    if (obj1[item] === obj2[item]) {
+      return { key: item, type: 'unchanged', value: obj1[item] };
     }
-    if (_.isObject(value2) && _.isObject(value1)) {
-      return { key: item, type: 'nested', value: getDiff(value1, value2) };
+    if (_.isObject(obj1[item]) && _.isObject(obj2[item])) {
+      return { key: item, type: 'nested', value: getDiff(obj1[item], obj2[item]) };
     }
-    return { key: item, type: 'changed', value: [value1, value2] };
+    return { key: item, type: 'changed', value: [obj1[item], obj2[item]] };
   });
 };
 
